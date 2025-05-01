@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "UntitledPinballFrontend (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "UntitledPinballFrontend (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
