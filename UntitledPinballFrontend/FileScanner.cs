@@ -1,26 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Microsoft.UI.Xaml.Shapes;
+using Windows.Storage;
 using OpenMcdf;
-using Windows.Devices.Geolocation;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace UntitledPinballFrontend
 {
     public partial class FileScanner
     {
         private static FileScanner? instance;
-        public ObservableCollection<TableEntry> tablesList = [];
-
         public static FileScanner Instance
         {
             get
@@ -29,20 +21,48 @@ namespace UntitledPinballFrontend
                 return instance;
             }
         }
+        
+        private string _scanPath = "";
+        public string ScanPath {
+            set { 
+                _scanPath = value;
+                SaveSettings();
+                Scan();
+            }
+            get { return _scanPath; }
+        }
+        public string FileExtension = "vpx";
 
         private FileScanner()
         {
+            LoadSettings();
             Scan();
         }
 
-        void Scan()
+        private void LoadSettings()
         {
-            var files = Directory.GetFiles("E:\\Visual Pinball\\Tables", "*.vpx");
+            ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            ScanPath = localSettings.Values["TablesPath"] as string ?? "";
+        }
+
+        public void SaveSettings()
+        {
+            ApplicationDataContainer localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            localSettings.Values["TablesPath"] = ScanPath;
+        }
+
+        public List<TableEntry> Scan()
+        {
+            List<TableEntry> tablesList = [];
+
+            var files = Directory.GetFiles(ScanPath, $"*.{FileExtension}");
 
             foreach (string file in files)
             {
                 tablesList.Add(ParseVPX(file));
             }
+
+            return tablesList;
         }
 
         private static TableEntry ParseVPX(string filePath)
@@ -59,7 +79,7 @@ namespace UntitledPinballFrontend
             catch (Exception ex)
             {
                 // No TableInfo, fall back to getting the info from the filename.
-                Console.WriteLine($"Error getting table information: {ex.Message}");
+                Debug.WriteLine($"Error getting table information for {filePath}: {ex.Message}");
                 ParseFilePath(filePath, ref table);
             }
             finally
@@ -72,59 +92,129 @@ namespace UntitledPinballFrontend
 
         private static void GetBaseTableInfo(CompoundFile cf, string filePath, ref TableEntry table)
         {
-            var tableInfoStorage = cf.RootStorage.GetStorage("TableInfo");
-            CFStream tableNameStream = tableInfoStorage.GetStream("TableName");
-            byte[] buffer = tableNameStream.GetData();
-            var tableName = Encoding.Unicode.GetString(buffer);
-            ParseTableName(tableName, ref table);
-            ParseFilePath(filePath, ref table);
+            try
+            {
+                var tableInfoStorage = cf.RootStorage.GetStorage("TableInfo");
+                CFStream tableNameStream = tableInfoStorage.GetStream("TableName");
+                byte[] buffer = tableNameStream.GetData();
+                var tableName = Encoding.Unicode.GetString(buffer);
+                ParseTableName(tableName, ref table);
+                ParseFilePath(filePath, ref table);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error getting table info for {filePath}: {ex.Message}");
+                throw;
+            }
         }
 
         private static void GetExtendedTableInfo(ref TableEntry table, CompoundFile cf)
         {
+            CFStorage? cfStorage;
+            CFStream cfStream;
+            byte[] buffer;
+
             try
             {
-                var tableInfoStorage = cf.RootStorage.GetStorage("TableInfo");
-                CFStream tableVersionStream = tableInfoStorage.GetStream("TableVersion");
-                byte[] buffer = tableVersionStream.GetData();
+                cfStorage = cf.RootStorage.GetStorage("TableInfo");
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine($"Error getting table info for {table.Name}: {ex.Message}");
+                return;
+            }
+
+            try
+            {
+                cfStream = cfStorage.GetStream("TableVersion");
+                buffer = cfStream.GetData();
                 table.TableVersion = Encoding.Unicode.GetString(buffer);
+            } 
+            catch(Exception ex)
+            {
+                Debug.WriteLine($"Error getting table version for {table.Name}: {ex.Message}");
+            }
 
-                CFStream tableRevStream = tableInfoStorage.GetStream("TableSaveRev");
-                buffer = tableVersionStream.GetData();
+            try
+            {
+                cfStream = cfStorage.GetStream("TableSaveRev");
+                buffer = cfStream.GetData();
                 table.TableRevision = Encoding.Unicode.GetString(buffer);
+            } 
+            catch(Exception ex)
+            {
+                Debug.WriteLine($"Error getting table revision for {table.Name}: {ex.Message}");
+            }
 
-                CFStream tableRulesStream = tableInfoStorage.GetStream("TableRules");
-                buffer = tableRulesStream.GetData();
+            try
+            {
+                cfStream = cfStorage.GetStream("TableRules");
+                buffer = cfStream.GetData();
                 table.TableRules = Encoding.Unicode.GetString(buffer);
+            } catch(Exception ex)
+            {
+                Debug.WriteLine($"Error getting table rules for {table.Name}: {ex.Message}");
+            }
 
-                CFStream tableDescriptionStream = tableInfoStorage.GetStream("TableDescription");
-                buffer = tableDescriptionStream.GetData();
+            try
+            {
+                cfStream = cfStorage.GetStream("TableDescription");
+                buffer = cfStream.GetData();
                 table.TableDescription = Encoding.Unicode.GetString(buffer);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error getting extended table info: {ex.Message}");
+                Debug.WriteLine($"Error getting table description for {table.Name}: {ex.Message}");
             }
         }
 
         private static void GetAuthorInfo(ref TableEntry table, CompoundFile cf)
         {
+            CFStorage? cfStorage;
+            CFStream cfStream;
+            byte[] buffer;
+
             try
             {
-                var tableInfoStorage = cf.RootStorage.GetStorage("TableInfo");
-                CFStream authorNameStream = tableInfoStorage.GetStream("AuthorName");
-                byte[] buffer = authorNameStream.GetData();
+                cfStorage = cf.RootStorage.GetStorage("TableInfo");
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine($"Error getting author info for {table.Name}: {ex.Message}");
+                return;
+            }
+
+            try
+            {
+                cfStream= cfStorage.GetStream("AuthorName");
+                buffer = cfStream.GetData();
                 table.AuthorName = Encoding.Unicode.GetString(buffer);
-                CFStream authorEmailStream = tableInfoStorage.GetStream("AuthorEmail");
-                buffer = authorEmailStream.GetData();
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine($"Error getting author name for {table.Name}: {ex.Message}");
+            }
+
+            try
+            {
+                cfStream = cfStorage.GetStream("AuthorEmail");
+                buffer = cfStream.GetData();
                 table.AuthorEmail = Encoding.Unicode.GetString(buffer);
-                CFStream authorWebsiteStream = tableInfoStorage.GetStream("AuthorWebsite");
-                buffer = authorWebsiteStream.GetData();
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine($"Error getting author e-mail for {table.Name}: {ex.Message}");
+            }
+
+            try 
+            { 
+                cfStream = cfStorage.GetStream("AuthorWebsite");
+                buffer = cfStream.GetData();
                 table.AuthorWebsite = Encoding.Unicode.GetString(buffer);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error getting author info: {ex.Message}");
+                Debug.WriteLine($"Error getting author website for {table.Name}: {ex.Message}");
             }
         }
 
@@ -201,7 +291,7 @@ namespace UntitledPinballFrontend
             }
         }
 
-        private static ImageSource AddManufacturerLogo(string manufacturer)
+        private static SvgImageSource AddManufacturerLogo(string manufacturer)
         {
             return manufacturer switch
             {

@@ -46,7 +46,7 @@ namespace UntitledPinballFrontend
             // Create a Frame to act as the navigation context.
             Frame rootFrame = new Frame();
 
-            //rootFrame.NavigationFailed += OnNavigationFailed;
+            rootFrame.NavigationFailed += OnNavigationFailed;
 
             // Place the frame in the current Window
             m_window.Content = rootFrame;
@@ -54,6 +54,11 @@ namespace UntitledPinballFrontend
             rootFrame.Navigate(typeof(MainPage), args.Arguments);
 
             m_window.Activate();
+        }
+
+        void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
+        {
+            throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
         }
 
         private Window? m_window;

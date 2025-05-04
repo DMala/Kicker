@@ -14,6 +14,11 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Windows.UI.WindowManagement;
+using Microsoft.UI.Xaml.Hosting;
+using Microsoft.UI.Xaml.Media.Animation;
+using System.Drawing;
+using Microsoft.UI;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -42,12 +47,11 @@ namespace UntitledPinballFrontend
         public MainPage()
         {
             this.InitializeComponent();
-            PopulateTables();
-        }
 
-        private void PopulateTables()
-        {
-            TablesGridView.ItemsSource = FileScanner.Instance.tablesList;
+            this.Loaded += (sender, e) =>
+            {
+                Frame.Background = new SolidColorBrush(Colors.Black);
+            };
         }
 
         private void BasicGridView_ItemClick(object sender, ItemClickEventArgs e)
@@ -67,9 +71,7 @@ namespace UntitledPinballFrontend
                     {
                         appWindow.Hide();
 
-                        TableLauncher launcher = new();
-
-                        launcher.LaunchTable(SelectedTable.Path);
+                        TableLauncher.Instance.LaunchTable(SelectedTable.Path);
                         appWindow.Show();
                     }
                 }
@@ -97,15 +99,38 @@ namespace UntitledPinballFrontend
                 {
                     appWindow.Hide();
 
-                    TableLauncher launcher = new();
-
                     Random random = new();
-                    var rnd = random.Next(0, FileScanner.Instance.tablesList.Count - 1);
+                    var rnd = random.Next(0, vm.Tables.Count - 1);
 
-                    launcher.LaunchTable(FileScanner.Instance.tablesList[rnd].Path);
+                    TableLauncher.Instance.LaunchTable(vm.Tables[rnd].Path);
 
                     appWindow.Show();
                 }
+            }
+        }
+
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            Frame.Navigate(
+                typeof(SettingsPage),
+                null,
+                new SlideNavigationTransitionInfo()
+                { Effect = SlideNavigationTransitionEffect.FromRight });
+        }
+
+        private void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
+        {
+            switch (((MenuFlyoutItem)sender).Tag)
+            {
+                case "SortByName":
+                    vm.Sort(SortType.Name);
+                    break;
+                case "SortByYear":
+                    vm.Sort(SortType.Year);
+                    break;
+                case "SortByManufacturer":
+                    vm.Sort(SortType.Manufacturer);
+                    break;
             }
         }
     }

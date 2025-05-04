@@ -65,6 +65,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <CollectionViewSource x:Key="TablesCollection" Source="{x:Bind Path=vm.Tables, Mode=OneWay}"/>
     </Page.Resources>
 
     <Border>
@@ -73,11 +74,39 @@
         </Border.Background>
         <Grid Margin="75 75 75 25" HorizontalAlignment="Center">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0 0 0 10" Grid.Row="0">
+                <Button 
+                    Height="45"
+                    Width="45"
+                    Background="{ThemeResource AcrylicInAppFillColorDefaultInverseBrush}"
+                    Margin="0 0 10 0">
+                    <Button.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                            <MenuFlyoutSubItem Text="Sort">
+                                <MenuFlyoutItem Text="Name" Tag="SortByName" Click="MenuFlyoutItem_Click"/>
+                                <MenuFlyoutItem Text="Year" Tag="SortByYear" Click="MenuFlyoutItem_Click"/>
+                                <MenuFlyoutItem Text="Manufacturer" Tag="SortByManufacturer" Click="MenuFlyoutItem_Click"/>
+                            </MenuFlyoutSubItem>
+                        </MenuFlyout>
+                    </Button.Flyout>
+                    <SymbolIcon Symbol="Filter" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+                <Button 
+                    Click="SettingsButton_Click" 
+                    Grid.Row="0" 
+                    Height="45"
+                    Width="45"
+                    Background="{ThemeResource AcrylicInAppFillColorDefaultInverseBrush}">
+                    <SymbolIcon Symbol="Setting" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Button>
+            </StackPanel>
             <GridView 
                 x:Name="TablesGridView"
+                ItemsSource="{Binding Source={StaticResource TablesCollection}}"
                 ItemTemplate="{StaticResource TablesTemplate}"
                 ItemContainerStyle="{StaticResource CustomGridViewItemStyle}"
                 IsItemClickEnabled="True"
@@ -85,8 +114,8 @@
                 SelectionMode="Single"
                 Background="{ThemeResource AcrylicInAppFillColorDefaultInverseBrush}"
                 CornerRadius="30"
-                Grid.Row="0"/>
-            <StackPanel Orientation="Horizontal" Grid.Row="1" >
+                Grid.Row="1"/>
+            <StackPanel Orientation="Horizontal" Grid.Row="2" >
                 <Button x:Name="StatefulButton" Width="100" Height="100" Click="LaunchButton_Click" 
                         IsEnabled="{x:Bind Path=vm.StartButtonEnabled, Mode=OneWay}" Margin="10 20 10 10">
                     <Button.Template>
