@@ -23,11 +23,11 @@ using Microsoft.UI;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace UntitledPinballFrontend
+namespace Kicker
 {
     public sealed partial class MainPage : Page
     {
-        public MainViewModel vm = new();
+        public MainViewModel vm;
 
         private TableEntry? _SelectedTable;
         private TableEntry? SelectedTable
@@ -44,10 +44,14 @@ namespace UntitledPinballFrontend
             }
         }
 
-        public MainPage()
+        public MainPage() : this((Application.Current as App)?.MainViewModel!)
+        {
+
+        }
+        public MainPage(MainViewModel vm)
         {
             this.InitializeComponent();
-
+            this.vm = vm;
             this.Loaded += (sender, e) =>
             {
                 Frame.Background = new SolidColorBrush(Colors.Black);

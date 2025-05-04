@@ -1,9 +1,9 @@
 {
   "profiles": {
-    "UntitledPinballFrontend (Package)": {
+    "Kicker (Package)": {
       "commandName": "MsixPackage"
     },
-    "UntitledPinballFrontend (Unpackaged)": {
+    "Kicker (Unpackaged)": {
       "commandName": "Project"
     }
   }

@@ -17,17 +17,22 @@ using Microsoft.UI.Xaml.Media.Animation;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
-namespace UntitledPinballFrontend
+namespace Kicker
 {
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
     public sealed partial class SettingsPage : Page
     {
-        public SettingsPageViewModel vm = new();
-        public SettingsPage()
+        public SettingsPageViewModel vm;
+
+        public SettingsPage() : this((Application.Current as App)?.SettingsPageViewModel!)
+        {
+        }
+        public SettingsPage(SettingsPageViewModel vm)
         {
             this.InitializeComponent();
+            this.vm = vm;
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)

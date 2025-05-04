@@ -8,7 +8,7 @@ using OpenMcdf;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace UntitledPinballFrontend
+namespace Kicker
 {
     public partial class FileScanner
     {
@@ -24,10 +24,13 @@ namespace UntitledPinballFrontend
         
         private string _scanPath = "";
         public string ScanPath {
-            set { 
-                _scanPath = value;
-                SaveSettings();
-                Scan();
+            set {
+                if (_scanPath != value)
+                {
+                    _scanPath = value;
+                    SaveSettings();
+                    Scan();
+                }
             }
             get { return _scanPath; }
         }
@@ -54,6 +57,12 @@ namespace UntitledPinballFrontend
         public List<TableEntry> Scan()
         {
             List<TableEntry> tablesList = [];
+
+            if (ScanPath == string.Empty || !Directory.Exists(ScanPath))
+            {
+                Debug.WriteLine("No path set for scanning.");
+                return tablesList;
+            }
 
             var files = Directory.GetFiles(ScanPath, $"*.{FileExtension}");
 

@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 
-namespace UntitledPinballFrontend
+namespace Kicker
 {
     internal class TableLauncher
     {
