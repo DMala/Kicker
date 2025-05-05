@@ -19,6 +19,7 @@ using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media.Animation;
 using System.Drawing;
 using Microsoft.UI;
+using System.Threading;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -67,29 +68,28 @@ namespace Kicker
         {
             if (SelectedTable != null)
             {
-                var window = (Application.Current as App)?.Window as MainWindow;
-                if (window != null)
-                {
-                    Microsoft.UI.Windowing.AppWindow appWindow = window.AppWindow;
-                    if (appWindow != null)
-                    {
-                        appWindow.Hide();
-
-                        TableLauncher.Instance.LaunchTable(SelectedTable.Path);
-                        appWindow.Show();
-                    }
-                }
+                Launch(SelectedTable);
             }
             else
             {
-                ContentDialog dialog = new ContentDialog();
-                dialog.Title = "No table selected.";
-                dialog.PrimaryButtonText = "OK";
-                dialog.DefaultButton = ContentDialogButton.Primary;
-                dialog.Content = "Please select a table first.";
-                dialog.XamlRoot = this.XamlRoot;
+                ContentDialog dialog = new()
+                {
+                    Title = "No table selected.",
+                    PrimaryButtonText = "OK",
+                    DefaultButton = ContentDialogButton.Primary,
+                    Content = "Please select a table first.",
+                    XamlRoot = this.XamlRoot
+                };
 
                 _ = dialog.ShowAsync();
+            }
+        }
+
+        private void Table_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            if (SelectedTable != null)
+            {
+                Launch(SelectedTable, 1000);
             }
         }
 
@@ -98,18 +98,9 @@ namespace Kicker
             var window = (Application.Current as App)?.Window as MainWindow;
             if (window != null)
             {
-                Microsoft.UI.Windowing.AppWindow appWindow = window.AppWindow;
-                if (appWindow != null)
-                {
-                    appWindow.Hide();
-
-                    Random random = new();
-                    var rnd = random.Next(0, vm.Tables.Count - 1);
-
-                    TableLauncher.Instance.LaunchTable(vm.Tables[rnd].Path);
-
-                    appWindow.Show();
-                }
+                Random random = new();
+                var rnd = random.Next(0, vm.Tables.Count - 1);
+                Launch(vm.Tables[rnd]);
             }
         }
 
@@ -135,6 +126,25 @@ namespace Kicker
                 case "SortByManufacturer":
                     vm.Sort(SortType.Manufacturer);
                     break;
+            }
+        }
+
+        private static void Launch(TableEntry table, int sleep = 0)
+        {
+            var window = (Application.Current as App)?.Window as MainWindow;
+            if (window != null)
+            {
+                Microsoft.UI.Windowing.AppWindow appWindow = window.AppWindow;
+                if (appWindow != null)
+                {
+                    if (sleep > 0)
+                    {
+                        Thread.Sleep(sleep);
+                    }
+                    appWindow.Hide();
+                    TableLauncher.Instance.LaunchTable(table.Path);
+                    appWindow.Show();
+                }
             }
         }
     }

@@ -11,7 +11,7 @@
 
     <Page.Resources>
         <DataTemplate x:Key="TablesTemplate" x:DataType="local:TableEntry">
-            <Grid CornerRadius="12" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10" Width="150" Height="120">
+            <Grid CornerRadius="12" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10" Width="150" Height="120" DoubleTapped="Table_DoubleTapped">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />

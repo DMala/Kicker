@@ -84,6 +84,14 @@ namespace Kicker
                 GetBaseTableInfo(cf, filePath, ref table);
                 GetExtendedTableInfo(ref table, cf);
                 GetAuthorInfo(ref table, cf);
+
+                // Special case - If we get the default demo table for the name, fall back to the filename.
+                if (table.Name == "Visual Pinball Demo Table")
+                {
+                    table.Name = string.Empty;
+                    throw new Exception("Sample table name detected, fall back to filename");
+                }
+
             }
             catch (Exception ex)
             {
