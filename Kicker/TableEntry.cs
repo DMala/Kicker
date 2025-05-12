@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace Kicker
 {
@@ -21,7 +19,22 @@ namespace Kicker
         public string AuthorEmail { set; get; }
         public string AuthorWebsite { set; get; }
         public string Path { set; get; }
-        public ImageSource? IconPath { set; get; }
+        public string IconPath { set; get; }
+        
+        [JsonIgnore]
+        public SvgImageSource Icon
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(IconPath))
+                {
+                    return new SvgImageSource(); ;
+                }
+                var uri = new Uri(IconPath);
+                var icon = new SvgImageSource(uri);
+                return icon;
+            }
+        }
 
         public TableEntry()
         {
@@ -37,7 +50,7 @@ namespace Kicker
             AuthorEmail = string.Empty;
             AuthorWebsite = string.Empty;
             Path = string.Empty;
-            IconPath = null;
+            IconPath = string.Empty;
         }
     }
 }

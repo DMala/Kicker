@@ -1,23 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using Windows.UI.WindowManagement;
-using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media.Animation;
-using System.Drawing;
 using Microsoft.UI;
 using System.Threading;
 
@@ -29,21 +15,6 @@ namespace Kicker
     public sealed partial class MainPage : Page
     {
         public MainViewModel vm;
-
-        private TableEntry? _SelectedTable;
-        private TableEntry? SelectedTable
-        {
-            get
-            {
-                return _SelectedTable;
-            }
-            
-            set
-            {
-                _SelectedTable = value;
-                vm.StartButtonEnabled = value != null;
-            }
-        }
 
         public MainPage() : this((Application.Current as App)?.MainViewModel!)
         {
@@ -57,18 +28,25 @@ namespace Kicker
             {
                 Frame.Background = new SolidColorBrush(Colors.Black);
             };
-        }
-
-        private void BasicGridView_ItemClick(object sender, ItemClickEventArgs e)
-        {
-            SelectedTable = e.ClickedItem as TableEntry;
+        
+            FileScanner.Instance.ScanCompleted += (sender, tables) =>
+            {
+                this.DispatcherQueue.TryEnqueue(() =>
+                {
+                    vm.Tables = tables;
+                    vm.StartButtonEnabled = TablesGridView.SelectedItem != null;
+                });
+            };
         }
 
         private void LaunchButton_Click(object sender, RoutedEventArgs e)
         {
-            if (SelectedTable != null)
+            if (TablesGridView.SelectedItem != null)
             {
-                Launch(SelectedTable);
+                if (TablesGridView.SelectedItem is TableEntry table)
+                {
+                    Launch(table);
+                }
             }
             else
             {
@@ -85,11 +63,26 @@ namespace Kicker
             }
         }
 
+        private void TablesGridView_ProcessKeyboardAccelerators(UIElement sender, ProcessKeyboardAcceleratorEventArgs args)
+        {
+            if (args.Key == Windows.System.VirtualKey.Enter && TablesGridView.SelectedItem != null)
+            {
+                args.Handled = true;
+                if (TablesGridView.SelectedItem is TableEntry table)
+                {
+                    Launch(table);
+                }
+            }
+        }
+
         private void Table_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            if (SelectedTable != null)
+            if (TablesGridView.SelectedItem != null)
             {
-                Launch(SelectedTable, 1000);
+                if (TablesGridView.SelectedItem is TableEntry table)
+                {
+                    Launch(table, 1000);
+                }
             }
         }
 
@@ -129,6 +122,32 @@ namespace Kicker
             }
         }
 
+        private void Page_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            // Get the element that was clicked
+            var clickedElement = e.OriginalSource as FrameworkElement;
+
+            // Check if the clicked element is not part of the GridView
+            if (clickedElement != null && !IsElementInGridView(clickedElement))
+            {
+                TablesGridView.SelectedItem = null; // Clear the selection
+            }
+        }
+
+        private bool IsElementInGridView(FrameworkElement? element)
+        {
+            // Traverse the visual tree to check if the element is within the GridView
+            while (element != null)
+            {
+                if (element == TablesGridView)
+                {
+                    return true;
+                }
+                element = VisualTreeHelper.GetParent(element) as FrameworkElement;
+            }
+            return false;
+        }
+
         private static void Launch(TableEntry table, int sleep = 0)
         {
             var window = (Application.Current as App)?.Window as MainWindow;
@@ -146,6 +165,11 @@ namespace Kicker
                     appWindow.Show();
                 }
             }
+        }
+
+        private void TablesGridView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            vm.StartButtonEnabled = TablesGridView.SelectedItem != null;
         }
     }
 }

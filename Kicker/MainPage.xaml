@@ -11,7 +11,14 @@
 
     <Page.Resources>
         <DataTemplate x:Key="TablesTemplate" x:DataType="local:TableEntry">
-            <Grid CornerRadius="12" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10" Width="150" Height="120" DoubleTapped="Table_DoubleTapped">
+            <Grid 
+                CornerRadius="12" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Bottom" 
+                Margin="10" 
+                Width="150" 
+                Height="120" 
+                DoubleTapped="Table_DoubleTapped">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -26,7 +33,10 @@
                         <GradientStop Color="DarkGray" Offset="1" />
                     </LinearGradientBrush>
                 </Grid.Background>
-                <TextBlock Text="{Binding Name}" FontFamily="Assets/Fonts/rimouskisb.otf#RimouskiSb-Regular" FontSize="16" Padding="8,8,0,0" Foreground="DarkOrange"
+                <TextBlock Text="{Binding Name}" FontFamily="Assets/Fonts/rimouskisb.otf#RimouskiSb-Regular" 
+                           FontSize="16" 
+                           Padding="8,8,0,0" 
+                           Foreground="DarkOrange"
                            Style="{StaticResource BaseTextBlockStyle}"
                            Grid.Row="0"/>
                 <TextBlock Text="{Binding Manufacturer}" Padding="8,6,0,0" Foreground="DarkOrange"
@@ -35,7 +45,7 @@
                 <TextBlock Text="{Binding Year}" Padding="8,0,0,0" Foreground="DarkOrange"
                            Style="{StaticResource BodyTextBlockStyle}"
                            Grid.Row="2"/>
-                <ImageIcon Source="{Binding IconPath}"
+                <ImageIcon Source="{Binding Icon}"
                        MaxWidth="70"
                        MaxHeight="50"
                        HorizontalAlignment="Right"
@@ -50,6 +60,12 @@
             <GradientStop Color="DarkOrange" Offset="0.4" />
             <GradientStop Color="FloralWhite" Offset="1" />
         </LinearGradientBrush>
+        <LinearGradientBrush x:Key="SelectionOverBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="FloralWhite" Offset="0" />
+            <GradientStop Color="#FFB566" Offset="0.4" />
+            <GradientStop Color="FloralWhite" Offset="1" />
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="FocusBrush" Color="HotPink"/>
         <Style TargetType="GridViewItem" x:Key="CustomGridViewItemStyle">
             <Setter Property="Template">
                 <Setter.Value>
@@ -58,8 +74,8 @@
                             CornerRadius="12"
                             SelectedBorderThickness="3"
                             SelectedBorderBrush="{StaticResource SelectionBrush}"
-                            SelectedPointerOverBorderBrush="{StaticResource SelectionBrush}"
-                            SelectedPressedBorderBrush="{StaticResource SelectionBrush}"
+                            SelectedPointerOverBorderBrush="{StaticResource SelectionOverBrush}"
+                            SelectedPressedBorderBrush="#FFD19E"
                         />
                     </ControlTemplate>
                 </Setter.Value>
@@ -68,7 +84,7 @@
         <CollectionViewSource x:Key="TablesCollection" Source="{x:Bind Path=vm.Tables, Mode=OneWay}"/>
     </Page.Resources>
 
-    <Border>
+    <Border PointerPressed="Page_PointerPressed">
         <Border.Background>
             <ImageBrush ImageSource="Assets/wp6994972-pinball-wallpapers.jpg" Opacity="0.5" Stretch="UniformToFill"/>
         </Border.Background>
@@ -93,7 +109,7 @@
                             </MenuFlyoutSubItem>
                         </MenuFlyout>
                     </Button.Flyout>
-                    <SymbolIcon Symbol="Filter" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <SymbolIcon Symbol="Sort" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Button>
                 <Button 
                     Click="SettingsButton_Click" 
@@ -109,9 +125,10 @@
                 ItemsSource="{Binding Source={StaticResource TablesCollection}}"
                 ItemTemplate="{StaticResource TablesTemplate}"
                 ItemContainerStyle="{StaticResource CustomGridViewItemStyle}"
-                IsItemClickEnabled="True"
-                ItemClick="BasicGridView_ItemClick"
+                IsTabStop="True"
+                ProcessKeyboardAccelerators="TablesGridView_ProcessKeyboardAccelerators"
                 SelectionMode="Single"
+                SelectionChanged="TablesGridView_SelectionChanged"
                 Background="{ThemeResource AcrylicInAppFillColorDefaultInverseBrush}"
                 CornerRadius="30"
                 Grid.Row="1"/>

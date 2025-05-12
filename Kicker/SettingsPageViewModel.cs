@@ -40,5 +40,10 @@ namespace Kicker
             // Raise the PropertyChanged event, passing the name of the property whose value has changed.
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        public void Rescan()
+        {
+           FileScanner.Instance.ScanAsync(true);
+        }
     }
 }

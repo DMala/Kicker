@@ -42,8 +42,11 @@ namespace Kicker
 
         public MainViewModel()
         {
-            Tables = FileScanner.Instance.Scan();
-            Sort(SortType.Name);
+            FileScanner.Instance.ScanCompleted += (sender, tables) =>
+            {
+                Tables = tables;
+            };
+            FileScanner.Instance.ScanAsync();
         }
 
         public void OnPropertyChanged([CallerMemberName] string propertyName = "")

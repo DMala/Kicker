@@ -7,6 +7,9 @@ using Windows.Storage;
 using OpenMcdf;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.UI.Dispatching;
 
 namespace Kicker
 {
@@ -29,17 +32,16 @@ namespace Kicker
                 {
                     _scanPath = value;
                     SaveSettings();
-                    Scan();
                 }
             }
             get { return _scanPath; }
         }
         public string FileExtension = "vpx";
+        private readonly DispatcherQueue DispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
         private FileScanner()
         {
             LoadSettings();
-            Scan();
         }
 
         private void LoadSettings()
@@ -54,14 +56,34 @@ namespace Kicker
             localSettings.Values["TablesPath"] = ScanPath;
         }
 
-        public List<TableEntry> Scan()
+        public event EventHandler<List<TableEntry>>? ScanCompleted;
+        public void ScanAsync(bool rescan = false)
         {
-            List<TableEntry> tablesList = [];
+            Task.Run(() => Scan(rescan));
+        }
+
+        private async Task Scan(bool rescan = false)
+        {
+            List<TableEntry>? tablesList = null;
+            if (!rescan)
+            {
+                tablesList = await LoadTablesList();
+                if (tablesList != null && tablesList.Count > 0)
+                {
+                    DispatcherQueue.TryEnqueue(() =>
+                    {
+                        ScanCompleted?.Invoke(this, tablesList);
+                    });
+                    return;
+                }
+            }
+
+            tablesList ??= [];
 
             if (ScanPath == string.Empty || !Directory.Exists(ScanPath))
             {
                 Debug.WriteLine("No path set for scanning.");
-                return tablesList;
+                return;
             }
 
             var files = Directory.GetFiles(ScanPath, $"*.{FileExtension}");
@@ -71,7 +93,9 @@ namespace Kicker
                 tablesList.Add(ParseVPX(file));
             }
 
-            return tablesList;
+            await PersistTablesList(tablesList);
+
+            ScanCompleted?.Invoke(this, tablesList);
         }
 
         private static TableEntry ParseVPX(string filePath)
@@ -81,33 +105,37 @@ namespace Kicker
             CompoundFile cf = new(filePath);
             try {
                 var tableInfoStorage = cf.RootStorage.GetStorage("TableInfo");
-                GetBaseTableInfo(cf, filePath, ref table);
-                GetExtendedTableInfo(ref table, cf);
-                GetAuthorInfo(ref table, cf);
-
-                // Special case - If we get the default demo table for the name, fall back to the filename.
-                if (table.Name == "Visual Pinball Demo Table")
-                {
-                    table.Name = string.Empty;
-                    throw new Exception("Sample table name detected, fall back to filename");
-                }
-
             }
             catch (Exception ex)
             {
-                // No TableInfo, fall back to getting the info from the filename.
+                // Cannot open root storage, fall back to getting the info from the filename.
                 Debug.WriteLine($"Error getting table information for {filePath}: {ex.Message}");
                 ParseFilePath(filePath, ref table);
             }
-            finally
+
+            if (!GetBaseTableInfo(cf, filePath, ref table))
             {
-                cf.Close();
+                // No TableInfo, fall back to getting the info from the filename.
+                Debug.WriteLine($"Error getting table information for {filePath}: No TableInfo found");
+                ParseFilePath(filePath, ref table);
             }
+
+            GetExtendedTableInfo(ref table, cf);
+            GetAuthorInfo(ref table, cf);
+
+            // Special case - If we get the default demo table for the name, fall back to the filename.
+            if (table.Name == "Visual Pinball Demo Table")
+            {
+                table.Name = string.Empty;
+                ParseFilePath(filePath, ref table);
+            }
+
+            cf.Close();
 
             return table;
         }
 
-        private static void GetBaseTableInfo(CompoundFile cf, string filePath, ref TableEntry table)
+        private static bool GetBaseTableInfo(CompoundFile cf, string filePath, ref TableEntry table)
         {
             try
             {
@@ -121,8 +149,10 @@ namespace Kicker
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error getting table info for {filePath}: {ex.Message}");
-                throw;
+                return false;
             }
+
+            return true;
         }
 
         private static void GetExtendedTableInfo(ref TableEntry table, CompoundFile cf)
@@ -272,7 +302,7 @@ namespace Kicker
             if (closeParens > -1) {
                 var info = tableName.Substring(++openParens, closeParens - openParens);
 
-                if (entry.Year == string.Empty)
+                if (String.IsNullOrEmpty(entry.Year))
                 {
                     Regex reYear = ParseFourDigitYearRegex();
                     Match resultYear = reYear.Match(info);
@@ -284,7 +314,7 @@ namespace Kicker
                     }
                 }
 
-                if (entry.Manufacturer == string.Empty)
+                if (String.IsNullOrEmpty(entry.Manufacturer))
                 {
                     Regex reManufacturer = ParseLettersRegex();
                     MatchCollection resultManufacturer = reManufacturer.Matches(info);
@@ -301,27 +331,75 @@ namespace Kicker
                     }
                 }
 
-                if (entry.IconPath == null) 
-                {
-                    entry.IconPath = AddManufacturerLogo(entry.Manufacturer);
-                }
+                if (String.IsNullOrEmpty(entry.IconPath)) {
+                    entry.IconPath = AddManufacturerLogoUri(entry.Manufacturer);
+                } 
             }
         }
 
-        private static SvgImageSource AddManufacturerLogo(string manufacturer)
+        private static string AddManufacturerLogoUri(string manufacturer)
         {
             return manufacturer switch
             {
-                "Atari" => new SvgImageSource(new Uri("ms-appx:///Assets/Images/AtariLogo.svg")),
-                "Bally" => new SvgImageSource(new Uri("ms-appx:///Assets/Images/BallyLogo.svg")),
-                "Data East" => new SvgImageSource(new Uri("ms-appx:///Assets/Images/DataEastLogo.svg")),
-                "Gottlieb" => new SvgImageSource(new Uri("ms-appx:///Assets/Images/GottliebLogo.svg")),
-                "Sega" => new SvgImageSource(new Uri("ms-appx:///Assets/Images/SegaLogo.svg")),
-                "Stern" => new SvgImageSource(new Uri("ms-appx:///Assets/Images/SternLogo.svg")),
-                "Williams" => new SvgImageSource(new Uri("ms-appx:///Assets/Images/WilliamsLogo.svg")),
-                "Zaccaria" => new SvgImageSource(new Uri("ms-appx:///Assets/Images/ZaccariaLogo.svg")),
-                _ => new SvgImageSource(new Uri("ms-appx:///Assets/Images/pinmachine.svg"))
+                "Atari" => "ms-appx:///Assets/Images/AtariLogo.svg",
+                "Bally" => "ms-appx:///Assets/Images/BallyLogo.svg",
+                "Data East" => "ms-appx:///Assets/Images/DataEastLogo.svg",
+                "Gottlieb" => "ms-appx:///Assets/Images/GottliebLogo.svg",
+                "Sega" => "ms-appx:///Assets/Images/SegaLogo.svg",
+                "Stern" => "ms-appx:///Assets/Images/SternLogo.svg",
+                "Williams" => "ms-appx:///Assets/Images/WilliamsLogo.svg",
+                "Zaccaria" => "ms-appx:///Assets/Images/ZaccariaLogo.svg",
+                _ => "ms-appx:///Assets/Images/pinmachine.svg"
             };
+        }
+
+        private static async Task PersistTablesList(List<TableEntry> tables)
+        {
+            try
+            {
+                string jsonTables = JsonSerializer.Serialize(tables);
+
+                // Get the local folder
+                StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+
+                // Create or replace the file
+                StorageFile file = await localFolder.CreateFileAsync("TablesList.json", CreationCollisionOption.ReplaceExisting);
+
+                // Write the JSON data to the file
+                await FileIO.WriteTextAsync(file, jsonTables);
+            } 
+            catch(Exception ex)
+            {
+                Debug.WriteLine($"Error persisting tables list: {ex.Message}");
+            }
+        }
+
+        private static async Task<List<TableEntry>?> LoadTablesList()
+        {
+            try
+            {
+                // Get the local folder
+                StorageFolder localFolder = ApplicationData.Current.LocalFolder;
+
+                // Check if the file exists
+                StorageFile file = await localFolder.GetFileAsync("TablesList.json");
+
+                // Read the JSON data from the file
+                string jsonTables = await FileIO.ReadTextAsync(file);
+
+                // Deserialize the JSON data
+                return JsonSerializer.Deserialize<List<TableEntry>>(jsonTables);
+            }
+            catch (FileNotFoundException)
+            {
+                // File not found, return null
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error loading tables list: {ex.Message}");
+                return null;
+            }
         }
 
         [GeneratedRegex(@"\b\d{4}\b")]

@@ -35,6 +35,11 @@ namespace Kicker
             this.vm = vm;
         }
 
+        private void RescanButton_Click(object sender, RoutedEventArgs e)
+        {
+            vm.Rescan();
+        }
+
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
             Frame.Navigate(
