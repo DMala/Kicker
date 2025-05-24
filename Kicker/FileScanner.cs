@@ -2,7 +2,6 @@
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage;
 using OpenMcdf;
 using System.Collections.Generic;
@@ -95,7 +94,10 @@ namespace Kicker
 
             await PersistTablesList(tablesList);
 
-            ScanCompleted?.Invoke(this, tablesList);
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                ScanCompleted?.Invoke(this, tablesList);
+            });
         }
 
         private static TableEntry ParseVPX(string filePath)
@@ -343,9 +345,12 @@ namespace Kicker
             {
                 "Atari" => "ms-appx:///Assets/Images/AtariLogo.svg",
                 "Bally" => "ms-appx:///Assets/Images/BallyLogo.svg",
+                "Chicago Coin" => "ms-appx:///Assets/Images/ChicagoCoinLogo.svg",
                 "Data East" => "ms-appx:///Assets/Images/DataEastLogo.svg",
                 "Gottlieb" => "ms-appx:///Assets/Images/GottliebLogo.svg",
+                "Playmatic" => "ms-appx:///Assets/Images/PlaymaticLogo.svg",
                 "Sega" => "ms-appx:///Assets/Images/SegaLogo.svg",
+                "Sonic" => "ms-appx:///Assets/Images/SonicLogo.svg",
                 "Stern" => "ms-appx:///Assets/Images/SternLogo.svg",
                 "Williams" => "ms-appx:///Assets/Images/WilliamsLogo.svg",
                 "Zaccaria" => "ms-appx:///Assets/Images/ZaccariaLogo.svg",

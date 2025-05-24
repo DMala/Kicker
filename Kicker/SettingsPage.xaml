@@ -15,49 +15,58 @@
         BorderThickness="3"
         CornerRadius="12"
         Margin="125 75 125 75">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <TextBlock 
-                Text="Settings" 
-                FontFamily="Assets/Fonts/rimouskisb.otf#RimouskiSb-Regular" 
-                FontSize="40" 
-                FontWeight="Bold" 
-                HorizontalAlignment="Center" 
-                VerticalAlignment="Top" 
-                Margin="0,20,0,40"
-                Grid.Row="0"/>
-            <Grid HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Row="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Visual Pinball executable:" FontSize="18" VerticalAlignment="Center" Margin="0 0 10 10" Grid.Row="0" Grid.Column="0"/>
-                <TextBox Text="{x:Bind Path=vm.ExecutablePath, Mode=TwoWay}" Width="400" Margin="0,5,0,5" Grid.Row="0" Grid.Column="1"/>
-                <TextBlock Text="Tables folder:" FontSize="18" VerticalAlignment="Center" Margin="0 0 10 10" Grid.Row="1" Grid.Column="0"/>
-                <TextBox Text="{x:Bind Path=vm.ScanPath, Mode=TwoWay}" Width="400" Margin="0,5,0,5" Grid.Row="1" Grid.Column="1"/>
+        <Grid RowDefinitions="Auto, *">
+            <Grid HorizontalAlignment="Center" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto" MaxWidth="700" Grid.Row="0">
+                <TextBlock 
+                    Text="Settings" 
+                    FontFamily="Assets/Fonts/rimouskisb.otf#RimouskiSb-Regular" 
+                    FontSize="40" 
+                    FontWeight="Bold" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Top" 
+                    Margin="0,20,0,40"
+                    Grid.Row="0"/>
+                <Grid HorizontalAlignment="Left" RowDefinitions="Auto, Auto" ColumnDefinitions="Auto, Auto" VerticalAlignment="Top" Grid.Row="1">
+                    <TextBlock Text="Visual Pinball executable:" FontSize="18" VerticalAlignment="Center" Margin="0 0 10 10" Grid.Row="0" Grid.Column="0"/>
+                    <TextBox Text="{x:Bind Path=vm.ExecutablePath, Mode=TwoWay}" Width="400" Margin="0,5,0,5" Grid.Row="0" Grid.Column="1"/>
+                    <TextBlock Text="Tables folder:" FontSize="18" VerticalAlignment="Center" Margin="0 0 10 10" Grid.Row="1" Grid.Column="0"/>
+                    <TextBox Text="{x:Bind Path=vm.ScanPath, Mode=TwoWay}" Width="400" Margin="0,5,0,5" Grid.Row="1" Grid.Column="1"/>
+                </Grid>
+                <Button
+                    HorizontalAlignment="Left"
+                    Margin="5,0,0,5"
+                    Click="RescanButton_Click"
+                    Grid.Row="2">
+                    <TextBlock Text="Re-scan Tables" />
+                </Button>
+                <Line X1="0" X2="1" Stretch="Fill" Margin="10, 30, 10, 30" Stroke="#303030" StrokeThickness="2" Grid.Row="3" />
+                <CheckBox 
+                    x:Name="Joy2KeyEnabled" 
+                    Content="Launch Joy2Key"
+                    IsChecked="{x:Bind Path=vm.LaunchJoy2Key, Mode=TwoWay}"
+                    HorizontalAlignment="Left" 
+                    Grid.Row="4"/>
+                <TextBox 
+                    Text="{x:Bind Path=vm.Joy2KeyPath, Mode=TwoWay}" 
+                    IsEnabled="{x:Bind (x:Boolean)Joy2KeyEnabled.IsChecked, Mode=OneWay}" 
+                    Width="400" Margin="0,5,0,5" 
+                    HorizontalAlignment="Left" 
+                    Grid.Row="5"/>
+                <Line X1="0" X2="1" Stretch="Fill" Margin="10, 30, 10, 30" Stroke="#303030" StrokeThickness="2" Grid.Row="6" />
+                <Button
+                    HorizontalAlignment="Left"
+                    Margin="5,0,0,5"
+                    Click="LaunchButton_Click"
+                    Grid.Row="7">
+                    <TextBlock Text="Launch Visual Pinball" />
+                </Button>
             </Grid>
             <Button
-                HorizontalAlignment="Center"
-                Margin="5,0,0,5"
-                Click="RescanButton_Click"
-                Grid.Row="2">
-                <TextBlock Text="Re-scan Tables" />
-            </Button>
-            <Button
-                HorizontalAlignment="Left"
-                VerticalAlignment="Bottom"
-                Margin="20,0,0,20"
-                Click="BackButton_Click"
-                Grid.Row="3">
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Margin="20,0,0,20"
+                    Click="BackButton_Click"
+                    Grid.Row="1">
                 <SymbolIcon Symbol="Back" />
             </Button>
         </Grid>

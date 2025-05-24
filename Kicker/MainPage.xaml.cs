@@ -28,15 +28,6 @@ namespace Kicker
             {
                 Frame.Background = new SolidColorBrush(Colors.Black);
             };
-        
-            FileScanner.Instance.ScanCompleted += (sender, tables) =>
-            {
-                this.DispatcherQueue.TryEnqueue(() =>
-                {
-                    vm.Tables = tables;
-                    vm.StartButtonEnabled = TablesGridView.SelectedItem != null;
-                });
-            };
         }
 
         private void LaunchButton_Click(object sender, RoutedEventArgs e)

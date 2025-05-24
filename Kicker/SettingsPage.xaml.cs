@@ -37,7 +37,12 @@ namespace Kicker
 
         private void RescanButton_Click(object sender, RoutedEventArgs e)
         {
-            vm.Rescan();
+            SettingsPageViewModel.Rescan();
+        }
+
+        private void LaunchButton_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsPageViewModel.LaunchVP();
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)

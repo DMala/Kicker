@@ -33,6 +33,26 @@ namespace Kicker
             get { return TableLauncher.Instance.ExePath; }
         }
 
+        public bool LaunchJoy2Key
+        {
+            set
+            {
+                TableLauncher.Instance.ShouldLaunchJoy2Key = value;
+                OnPropertyChanged();
+            }
+            get { return TableLauncher.Instance.ShouldLaunchJoy2Key; }
+        }
+
+        public string Joy2KeyPath
+        {
+            set
+            {
+                TableLauncher.Instance.joy2KeyPath = value;
+                OnPropertyChanged();
+            }
+            get { return TableLauncher.Instance.joy2KeyPath; }
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged = delegate { };
 
         public void OnPropertyChanged([CallerMemberName] string propertyName = "")
@@ -41,9 +61,14 @@ namespace Kicker
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public void Rescan()
+        public static void Rescan()
         {
            FileScanner.Instance.ScanAsync(true);
+        }
+
+        public static void LaunchVP()
+        {
+            TableLauncher.Instance.LaunchTable();
         }
     }
 }

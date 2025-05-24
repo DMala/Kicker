@@ -16,12 +16,15 @@
     <None Remove="Assets\Fonts\rimouskisb.otf" />
     <None Remove="Assets\Images\AtariLogo.svg" />
     <None Remove="Assets\Images\BallyLogo.svg" />
+    <None Remove="Assets\Images\ChicagoCoinLogo.svg" />
     <None Remove="Assets\Images\DataEastLogo.svg" />
     <None Remove="Assets\Images\GottliebLogo.svg" />
     <None Remove="Assets\Images\pinmachine.svg" />
+    <None Remove="Assets\Images\PlaymaticLogo.svg" />
     <None Remove="Assets\Images\Random-lit.png" />
     <None Remove="Assets\Images\Random.png" />
     <None Remove="Assets\Images\SegaLogo.svg" />
+    <None Remove="Assets\Images\SonicLogo.svg" />
     <None Remove="Assets\Images\Start-dark.png" />
     <None Remove="Assets\Images\Start-lit.png" />
     <None Remove="Assets\Images\SternLogo.svg" />
